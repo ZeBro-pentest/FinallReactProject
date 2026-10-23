@@ -125,7 +125,6 @@ class SessionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filterset_fields = ['movie', 'hall']
     ordering_fields = ['starts_at', 'base_price']
-    ordering = ['starts_at']
 
     def get_queryset(self):
         queryset = Session.objects.select_related('movie', 'hall').prefetch_related(
@@ -134,8 +133,13 @@ class SessionViewSet(viewsets.ModelViewSet):
         date = self.request.query_params.get('date')
         if date:
             queryset = queryset.filter(starts_at__date=date)
-        if self.action == 'list' and not is_admin(self.request.user):
-            queryset = queryset.filter(starts_at__gte=timezone.now())
+        if self.action == 'list':
+            if is_admin(self.request.user):
+                queryset = queryset.order_by('-starts_at')
+            else:
+                queryset = queryset.filter(starts_at__gte=timezone.now()).order_by(
+                    'starts_at'
+                )
         return queryset
 
     def get_serializer_class(self):
@@ -272,9 +276,13 @@ class DashboardView(APIView):
             sessions_count = Session.objects.filter(
                 hall=hall, starts_at__gte=start, starts_at__lte=now
             ).count()
-            sold = tickets.filter(session__hall=hall).count()
+            sold = tickets.filter(
+                session__hall=hall,
+                session__starts_at__gte=start,
+                session__starts_at__lte=now,
+            ).count()
             capacity = sessions_count * hall.capacity
-            percent = round(sold / capacity * 100) if capacity else 0
+            percent = min(100, round(sold / capacity * 100)) if capacity else 0
             hall_rows.append(
                 {'hall': hall.name, 'percent': percent, 'sold': sold}
             )
