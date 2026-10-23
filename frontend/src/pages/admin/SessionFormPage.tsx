@@ -34,7 +34,7 @@ export function SessionFormPage() {
   const isEdit = Boolean(id)
   const navigate = useNavigate()
   const sessionQuery = useSession(id)
-  const { data: movies } = useMovies({ ordering: 'title', page: 1 })
+  const { data: movies } = useMovies({ ordering: 'title', page: 1, page_size: 100 })
   const { data: halls } = useHalls()
   const createSession = useCreateSession()
   const updateSession = useUpdateSession(id ?? 0)

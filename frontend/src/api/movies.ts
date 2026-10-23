@@ -7,6 +7,7 @@ export interface MoviesQuery {
   age_rating?: string
   ordering?: string
   page?: number
+  page_size?: number
 }
 
 export interface MoviePayload {
@@ -28,6 +29,7 @@ export async function getMovies(query: MoviesQuery) {
       age_rating: query.age_rating || undefined,
       ordering: query.ordering || undefined,
       page: query.page || undefined,
+      page_size: query.page_size || undefined,
     },
   })
   return data
